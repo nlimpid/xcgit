@@ -8,3 +8,12 @@ edition = "2018"
 
 [dependencies]
 reqwest = { version = "0.11", features = ["blocking", "json"] }
+git2 = "0.13.17"
+log = "0.4.14"
+
+[dependencies.clap]
+version = "~2.27.0"
+default-features = false
+
+# Cherry-pick the features you'd like to use
+features = [ "suggestions", "color" ]
