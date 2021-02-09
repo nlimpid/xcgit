@@ -11,8 +11,20 @@ extern crate clap;
 use clap::{App, Arg, ArgMatches, SubCommand};
 
 pub fn clone(url: String) {
+    let url = replace(url, "".to_string());
     let repo = match Repository::clone(&url, "hellogitworld") {
         Ok(repo) => repo,
         Err(e) => panic!("failed to clone: {}", e),
     };
+}
+
+pub fn replace(url: String, proxy: String) -> String {
+    return proxy_gh(url);
+}
+
+pub fn proxy_gh(url: String) -> String {
+    let base_url = "https://ghproxy.com/";
+
+    let result = base_url.to_owned() + &url;
+    return result;
 }
