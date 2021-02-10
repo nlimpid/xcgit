@@ -28,3 +28,16 @@ pub fn proxy_gh(url: String) -> String {
     let result = base_url.to_owned() + &url;
     return result;
 }
+
+#[cfg(test)]
+mod tests {
+    use super::*;
+
+    #[test]
+    fn gh_example() {
+        assert_eq!(
+            "https://ghproxy.com/https://github.com/nlimpid/xcgit",
+            proxy_gh("https://github.com/nlimpid/xcgit".to_string())
+        );
+    }
+}
