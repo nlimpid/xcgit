@@ -14,15 +14,7 @@ mod proxy;
 fn main() {
     let matches = App::new("xcgit")
         .version("v0.1")
-        .subcommand(
-            SubCommand::with_name("get").arg(
-                Arg::with_name("addr")
-                    .long("addr")
-                    .value_name("addr")
-                    .help("Sets a custom config file")
-                    .takes_value(true),
-            ),
-        )
+        .subcommand(SubCommand::with_name("get").arg(Arg::with_name("ADDR")))
         .subcommand(
             SubCommand::with_name("clone").arg(
                 Arg::with_name("addr")
@@ -56,7 +48,7 @@ fn download(url: String) -> Result<(), Box<dyn Error>> {
 }
 
 fn run_download(matches: &ArgMatches) -> Result<(), String> {
-    let target_url = matches.value_of("addr").unwrap_or("example.com");
+    let target_url = matches.value_of("ADDR").unwrap_or("example.com");
     let download_err = download(target_url.to_string());
     match download_err {
         Ok(v) => {}
@@ -64,7 +56,7 @@ fn run_download(matches: &ArgMatches) -> Result<(), String> {
             print!("{} is error", e.to_string())
         }
     }
-    let input = matches.value_of("input-file").unwrap();
+    let input = matches.value_of("ADDR").unwrap();
     download(input.to_string());
     Ok(())
 }
