@@ -12,6 +12,9 @@ use indicatif::{ProgressBar, ProgressStyle};
 use log::logger;
 mod proxy;
 use lust::get_file_size;
+use std::borrow::Cow;
+use std::fs::File;
+use std::io;
 use std::thread;
 use std::time::Duration;
 
@@ -55,19 +58,18 @@ fn run(matches: ArgMatches) -> Result<(), String> {
     }
 }
 
+fn basename<'a>(path: &'a String, sep: char) -> Cow<'a, str> {
+    let mut pieces = path.rsplit(sep);
+    match pieces.next() {
+        Some(p) => p.into(),
+        None => path.into(),
+    }
+}
+
 fn download(url: String) -> Result<(), Box<dyn Error>> {
-    let path = Path::new("lorem_ipsum.tar.gz");
-
-    let resp = reqwest::blocking::get(&url)?;
-    let file_size = resp.content_length().unwrap();
-
-    thread::spawn(move || getProgress("lorem_ipsum.tar.gz".to_string(), file_size));
-    let result = resp.bytes()?;
-
-    let mut file = File::create(&path)?;
-
-    file.write(&result)?;
-    Ok(())
+    let mut resp = reqwest::get(&url).await?.text().await?;
+    let mut out = File::create(basename(&url, '/').to_string()).expect("failed to create file");
+    io::copy(&mut resp, &mut out).expect("failed to copy content");
 }
 
 fn run_download(matches: &ArgMatches) -> Result<(), String> {
