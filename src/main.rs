@@ -1,10 +1,10 @@
 use std::{
     error::Error,
     fs::File,
-    i32,
     io::{self, Read, Write},
     path::Path,
 };
+use futures_util::StreamExt;
 
 extern crate clap;
 use clap::{App, Arg, ArgMatches, SubCommand};
@@ -14,6 +14,7 @@ mod proxy;
 use lust::get_file_size;
 use std::thread;
 use std::time::Duration;
+
 
 fn main() {
     let matches = App::new("xcgit")
@@ -31,7 +32,7 @@ fn main() {
     run(matches);
 }
 
-fn getProgress(f: String, total_size: u64) {
+fn get_progress(f: String, total_size: u64) {
     let fs = get_file_size(&f);
     let pb = ProgressBar::new(total_size);
     pb.set_style(ProgressStyle::default_bar()
@@ -41,7 +42,7 @@ fn getProgress(f: String, total_size: u64) {
     while fs < total_size {
         let fs = get_file_size(&f);
         pb.set_position(fs);
-        thread::sleep(Duration::from_millis(1000));
+        // thread::sleep(Duration::from_millis(1000));
     }
 }
 
@@ -55,25 +56,35 @@ fn run(matches: ArgMatches) -> Result<(), String> {
     }
 }
 
-fn download(url: String) -> Result<(), Box<dyn Error>> {
+async fn download(url: String) -> Result<(), Box<dyn Error>> {
+    let resp = reqwest::get(url.as_str())
+    .await?;
+    let file_size = resp.content_length();
+
+    let mut stream = resp.bytes_stream();
+
     let path = Path::new("lorem_ipsum.tar.gz");
-
-    let resp = reqwest::blocking::get(&url)?;
-    let file_size = resp.content_length().unwrap();
-
-    thread::spawn(move || getProgress("lorem_ipsum.tar.gz".to_string(), file_size));
-    let result = resp.bytes()?;
+    // let file_size = stream
+    thread::spawn(move || get_progress("lorem_ipsum.tar.gz".to_string(), file_size.unwrap()));
 
     let mut file = File::create(&path)?;
 
-    file.write(&result)?;
+
+    while let Some(item) = stream.next().await {
+        let aaa = &item?;
+        // println!("Chunk: {:?}", aaa.len());
+        // let data = item?.as_ref();
+        file.write(aaa.as_ref()).unwrap();
+    }
     Ok(())
 }
 
 fn run_download(matches: &ArgMatches) -> Result<(), String> {
     let target_url = matches.value_of("ADDR").unwrap_or("example.com");
     let download_err = download(target_url.to_string());
-    match download_err {
+    let tt =  tokio::runtime::Runtime::new().unwrap();
+    let d_err = tt.block_on(download_err);
+    match d_err {
         Ok(v) => {}
         Err(e) => {
             print!("{} is error", e.to_string())
