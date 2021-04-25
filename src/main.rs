@@ -1,20 +1,19 @@
+use futures_util::StreamExt;
 use std::{
     error::Error,
     fs::File,
-    io::{self, Read, Write},
+    io::{Write},
     path::Path,
 };
-use futures_util::StreamExt;
 
 extern crate clap;
 use clap::{App, Arg, ArgMatches, SubCommand};
 use indicatif::{ProgressBar, ProgressStyle};
-use log::logger;
 mod proxy;
 use lust::get_file_size;
 use std::thread;
+use reqwest::Url;
 use std::time::Duration;
-
 
 fn main() {
     let matches = App::new("xcgit")
@@ -32,7 +31,7 @@ fn main() {
     run(matches);
 }
 
-fn get_progress(f: String, total_size: u64) {
+async fn get_progress(f: String, total_size: u64){
     let fs = get_file_size(&f);
     let pb = ProgressBar::new(total_size);
     pb.set_style(ProgressStyle::default_bar()
@@ -44,59 +43,72 @@ fn get_progress(f: String, total_size: u64) {
         pb.set_position(fs);
         // thread::sleep(Duration::from_millis(1000));
     }
+    pb.finish();
 }
 
-fn run(matches: ArgMatches) -> Result<(), String> {
-    // ...
-    let logger = log::logger();
+fn run(matches: ArgMatches) -> Result<(), Box<dyn Error>> {
+    let rt = tokio::runtime::Runtime::new().unwrap();
+    let xcgit = Xcgit{rt: rt};
+
     match matches.subcommand() {
-        ("get", Some(m)) => run_download(m),
-        ("clone", Some(m)) => run_clone(m),
+        ("get", Some(m)) => xcgit.run_download(m),
+        ("clone", Some(m)) => xcgit.run_clone(m),
         _ => Ok(()),
     }
 }
 
-async fn download(url: String) -> Result<(), Box<dyn Error>> {
-    let resp = reqwest::get(url.as_str())
-    .await?;
-    let file_size = resp.content_length();
-
-    let mut stream = resp.bytes_stream();
-
-    let path = Path::new("lorem_ipsum.tar.gz");
-    // let file_size = stream
-    thread::spawn(move || get_progress("lorem_ipsum.tar.gz".to_string(), file_size.unwrap()));
-
-    let mut file = File::create(&path)?;
-
-
-    while let Some(item) = stream.next().await {
-        let aaa = &item?;
-        // println!("Chunk: {:?}", aaa.len());
-        // let data = item?.as_ref();
-        file.write(aaa.as_ref()).unwrap();
-    }
-    Ok(())
+struct Xcgit {
+    rt: tokio::runtime::Runtime
 }
 
-fn run_download(matches: &ArgMatches) -> Result<(), String> {
-    let target_url = matches.value_of("ADDR").unwrap_or("example.com");
-    let download_err = download(target_url.to_string());
-    let tt =  tokio::runtime::Runtime::new().unwrap();
-    let d_err = tt.block_on(download_err);
-    match d_err {
-        Ok(v) => {}
-        Err(e) => {
-            print!("{} is error", e.to_string())
+impl Xcgit {
+    async fn download(&self, url: Url) -> Result<(), Box<dyn Error>> {
+        let resp = reqwest::get(url.clone()).await?;
+  
+        // let download_filename = s.unwrap().clone().last();
+        let file_size = resp.content_length();
+        let mut stream = resp.bytes_stream();
+        let download_filename = url.path_segments().unwrap().into_iter().last().unwrap();
+        let path = Path::new(download_filename);
+        let progress_fu = get_progress(download_filename.to_string(), file_size.unwrap());
+        let task = self.rt.spawn(progress_fu);
+        // thread::spawn(move || get_progress(download_filename.to_string(), file_size.unwrap()));
+    
+        let mut file = File::create(&path)?;
+    
+        while let Some(item) = stream.next().await {
+            let aaa = &item?;
+            // println!("Chunk: {:?}", aaa.len());
+            // let data = item?.as_ref();
+            file.write(aaa.as_ref()).unwrap();
         }
+    
+        Ok(())
     }
-    let input = matches.value_of("ADDR").unwrap();
-    download(input.to_string());
-    Ok(())
+    fn run_download(&self, matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
+        let target_url = matches.value_of("ADDR").unwrap_or("example.com");
+        let  url = Url::parse(target_url)?;
+        ;
+        let download_err = self.download(url.clone());
+        let d_err = self.rt.block_on(download_err);
+        match d_err {
+            Ok(_) => {}
+            Err(e) => {
+                print!("{} is error", e.to_string())
+            }
+        }
+        Ok(())
+    }
+
+
+    fn run_clone(&self, matches: &ArgMatches) -> Result<(), Box<dyn Error>> {
+        let url = matches.value_of("addr").unwrap_or("hello");
+        proxy::clone(url.to_string());
+        Ok(())
+    }
 }
 
-fn run_clone(matches: &ArgMatches) -> Result<(), String> {
-    let url = matches.value_of("addr").unwrap();
-    proxy::clone(url.to_string());
-    Ok(())
-}
+
+
+
+
