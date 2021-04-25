@@ -32,16 +32,17 @@ fn main() {
 }
 
 async fn get_progress(f: String, total_size: u64){
-    let fs = get_file_size(&f);
     let pb = ProgressBar::new(total_size);
     pb.set_style(ProgressStyle::default_bar()
         .template("{spinner:.green} [{elapsed_precise}] [{bar:40.cyan/blue}] {bytes}/{total_bytes} ({eta})")
 .progress_chars("#>-"));
 
-    while fs < total_size {
+    loop {
         let fs = get_file_size(&f);
         pb.set_position(fs);
-        // thread::sleep(Duration::from_millis(1000));
+        if fs >= total_size {
+            break;
+        }
     }
     pb.finish();
 }
