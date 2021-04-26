@@ -30,7 +30,7 @@ jobs:
             asset_name: xcgit-windows
           - name: macos
             os: macos-latest
-            artifact_name: target/release/xcgit
+            artifact_name: target/release/xcgit-macos
             asset_name: xcgit-macos
 
     steps:
@@ -42,9 +42,12 @@ jobs:
         toolchain: stable
 
     - name: Cache Rust dependencies
-      uses: actions/cache@v1.0.1
+      uses: actions/cache@v2
       with:
-        path: target
+        path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            target
         key: ${{ runner.OS }}-build-${{ hashFiles('**\Cargo.lock') }}
         restore-keys: |
           ${{ runner.OS }}-build-
@@ -62,6 +65,6 @@ jobs:
       uses: softprops/action-gh-release@v1
       if: startsWith(github.ref, 'refs/tags/')
       with:
-        files: ${{ matrix.artifact_name }}/${{ matrix.asset_name }}
+        files: ${{ matrix.artifact_name }}
       env:
         GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
