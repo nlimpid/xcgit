@@ -2,6 +2,8 @@ name: Build and upload binaries to release
 
 on:
   push:
+    branches:
+      - main
     tags:
       - '*'
 
@@ -41,10 +43,10 @@ jobs:
 
     - name: Cache Rust dependencies
       uses: actions/cache@v1.0.1
-        with:
-          path: target
-          key: ${{ runner.OS }}-build-${{ hashFiles('**\Cargo.lock') }}
-          restore-keys: ${{ runner.OS }}-build-
+      with:
+        path: target
+        key: ${{ runner.OS }}-build-${{ hashFiles('**\Cargo.lock') }}
+        restore-keys: ${{ runner.OS }}-build-
 
     - name: Build
       run: cargo build --release --locked
