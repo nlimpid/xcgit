@@ -53,7 +53,7 @@ jobs:
           ${{ runner.OS }}-build-
 
     - name: Build
-      run: cargo build --release --locked --bin 
+      run: cargo build --release --locked
 
     - name: Upload binaries to release
       uses: actions/upload-artifact@v2
