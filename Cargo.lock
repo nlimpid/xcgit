@@ -1430,5 +1430,6 @@ dependencies = [
  "log",
  "lust",
  "reqwest",
+ "rust-crypto",
  "tokio",
 ]
