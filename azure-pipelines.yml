@@ -13,12 +13,11 @@ steps:
 - script: cat /proc/cpuinfo
   displayName: 'Run a one-line script'
 
-steps:
-  - script: |
-      curl https://sh.rustup.rs -sSf | sh -s -- -y
-      echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"      
-    displayName: Install rust
-  - script: cargo build --all
-    displayName: Cargo build
-  - script: cargo test --all
-    displayName: Cargo test
+- script: |
+    curl https://sh.rustup.rs -sSf | sh -s -- -y
+    echo "##vso[task.setvariable variable=PATH;]$PATH:$HOME/.cargo/bin"      
+  displayName: Install rust
+- script: cargo build --all
+  displayName: Cargo build
+- script: cargo test --all
+  displayName: Cargo test
