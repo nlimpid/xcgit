@@ -1426,10 +1426,14 @@ dependencies = [
  "futures",
  "futures-util",
  "git2",
+ "hyper",
  "indicatif",
  "log",
  "lust",
  "reqwest",
+<<<<<<< Updated upstream
  "rust-crypto",
+=======
+>>>>>>> Stashed changes
  "tokio",
 ]

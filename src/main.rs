@@ -1,16 +1,34 @@
+<<<<<<< Updated upstream
 use futures_util::StreamExt;
 use std::{error::Error, fs::File, io::Write, path::Path};
+=======
+use std::{
+    error::Error,
+    fs::File,
+    future::Future,
+    i32,
+    io::{self, Read, Write},
+    path::Path,
+};
+>>>>>>> Stashed changes
 
 extern crate clap;
 use clap::{App, Arg, ArgMatches, SubCommand};
 use indicatif::{ProgressBar, ProgressStyle};
 mod proxy;
 use lust::get_file_size;
+<<<<<<< Updated upstream
 use reqwest::Url;
 use std::thread;
 use std::time::Duration;
 extern crate crypto;
 use crypto::{digest::Digest, sha1::Sha1};
+=======
+use std::borrow::Cow;
+use std::thread;
+use std::time::Duration;
+use tokio::io::{self, AsyncWriteExt as _};
+>>>>>>> Stashed changes
 
 fn main() {
     let matches = App::new("xcgit")
@@ -31,7 +49,6 @@ fn main() {
             ),
         )
         .get_matches();
-
     run(matches);
 }
 
@@ -67,6 +84,7 @@ struct Xcgit {
     rt: tokio::runtime::Runtime,
 }
 
+<<<<<<< Updated upstream
 impl Xcgit {
     async fn download(&self, url: Url) -> Result<(Vec<u8>), Box<dyn Error>> {
         let resp = reqwest::get(url.clone()).await?;
@@ -89,6 +107,39 @@ impl Xcgit {
             // let data = item?.as_ref();
             file.write(aaa.as_ref()).unwrap();
             vec.extend_from_slice(aaa.as_ref());
+=======
+fn download(url: reqwest::Url) -> Result<(), Box<dyn Error>> {
+    let file_name = String::from(url.path().split('/').last().expect("failed to create file"));
+    let mut file = std::fs::File::create(file_name)?;
+    let mut res = reqwest::get(url).into()
+
+    // let mut res = client::.get(url)?;
+
+    println!("Response: {}", res.status());
+    println!("Headers: {:#?}\n", res.headers());
+
+    // Stream the body, writing each chunk to stdout as we get it
+    // (instead of buffering and printing at the end).
+
+    while let Some(next) = res.data() {
+        let chunk = next?;
+        file.write_all(&chunk)
+            .map_err(|e| panic!("example expects stdout is open, error={}", e));
+    }
+
+    println!("\n\nDone!");
+
+    Ok(())
+}
+
+fn run_download(matches: &ArgMatches) -> Result<(), String> {
+    let target_url = matches.value_of("ADDR").unwrap_or("example.com");
+    let download_err = download(target_url.parse::<hyper::Uri>().unwrap());
+    match download_err {
+        Ok(v) => {}
+        Err(e) => {
+            print!("{} is error", e.to_string())
+>>>>>>> Stashed changes
         }
         let c = vec.as_slice().to_owned();
 
