@@ -1,30 +1,26 @@
 [package]
+authors = ["nlimpid"]
+edition = "2021"
 name = "xcgit"
 version = "0.1.0"
-authors = ["nlimpid"]
-edition = "2018"
 
 # See more keys and their definitions at https://doc.rust-lang.org/cargo/reference/manifest.html
 
 [dependencies]
-reqwest = { version = "0.11", features = ["blocking", "json", "stream"] }
-futures-util = { version = "0.3.14" }
 futures = "0.3"
-tokio = { version = "1.5.0", features = ["full"] }
+futures-util = {version = "0.3.14"}
 git2 = "0.13.17"
-log = "0.4.14"
-indicatif = "0.15.0"
-lust = "0.1.1"
-<<<<<<< Updated upstream
-rust-crypto = "^0.2"
-=======
 hyper = "0.14.4"
-tokio = "1.2.0"
->>>>>>> Stashed changes
+indicatif = "0.15.0"
+log = "0.4.14"
+lust = "0.1.1"
+reqwest = {version = "0.11", features = ["blocking", "json", "stream"]}
+rust-crypto = "^0.2"
+tokio = {version = "1.15.0", features = ["full"]}
 
 [dependencies.clap]
-version = "~2.27.0"
 default-features = false
+version = "~2.27.0"
 
 # Cherry-pick the features you'd like to use
-features = [ "suggestions", "color" ]
+features = ["suggestions", "color"]
